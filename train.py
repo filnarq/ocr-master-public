@@ -27,7 +27,8 @@ class Net(nn.Module):
         return x
 
 def train_torch(modelPath, trainloader, epochs=15, lr=0.05, momentum=0.5, epochsPerSave=5, elsPerStat=50):
-    net = Net()
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    net = Net().to(device)
     print(net)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=lr, momentum=momentum)

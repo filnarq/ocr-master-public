@@ -51,18 +51,8 @@ def ocr(img, net, resize, padding, classes=None):
         data.append((prediction, probability, x, y, w, h))
     return data
 
-def inference_torch(image, net=None, modelPath=None):
-    if modelPath:
-        net = Net()
-        net.load_state_dict(torch.load(modelPath, weights_only=True))
+def inference_torch(image, net):
     image = torch.Tensor(np.expand_dims(np.transpose(image, (2,0,1)),axis=0))   
-    
     outputs = net(image)
-    # probability, predicted = torch.max(F.log_softmax(outputs,dim=1), 1)
     probability, predicted = torch.max(outputs, 1)
-
-    # if show:
-    #     print(f'Prediction{classes[predicted[0]]:5s}')
-    #     imshow(torchvision.utils.make_grid(image))
-
-    return predicted[0], probability[0]
+    return predicted.item(), probability.item()

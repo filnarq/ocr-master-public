@@ -9,9 +9,9 @@ from load_dataset import imshow
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(3, 18, 3)
+        self.conv1 = nn.Conv2d(3, 18, 5)
         self.pool1 = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(18, 48, 4)
+        self.conv2 = nn.Conv2d(18, 48, 3)
         self.pool2 = nn.MaxPool2d(2, 2)
         self.fc1 = nn.Linear(48 * 4 * 4, 256)
         self.fc2 = nn.Linear(256, 128)
@@ -26,8 +26,7 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
 
-def train_torch(modelPath, trainloader, epochs=15, lr=0.05, momentum=0.5, epochsPerSave=5, elsPerStat=50):
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+def train_torch(device, modelPath, trainloader, epochs, lr, momentum, epochsPerSave, elsPerStat):
     net = Net().to(device)
     print(net)
     criterion = nn.CrossEntropyLoss()
@@ -37,6 +36,7 @@ def train_torch(modelPath, trainloader, epochs=15, lr=0.05, momentum=0.5, epochs
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
+            inputs, labels = inputs.to(device), labels.to(device)
 
             # zero the parameter gradients
             optimizer.zero_grad()
@@ -46,34 +46,38 @@ def train_torch(modelPath, trainloader, epochs=15, lr=0.05, momentum=0.5, epochs
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
+            running_loss += loss.item()
 
             # print statistics
-            running_loss += loss.item()
-            if i % elsPerStat == (elsPerStat-1):    # print every 2000 mini-batches
+            if i % elsPerStat == (elsPerStat-1):
                 print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / elsPerStat:.3f}')
                 running_loss = 0.0
+        
+        # Save checkpoint
         if epoch % epochsPerSave == (epochsPerSave-1):
-            torch.save(net.state_dict(), modelPath.replace('.pth', '_%se.pth'%epoch))
+            torch.save(net.state_dict(), modelPath.replace('.pth', '_%se.pth'%(epoch+1)))
+    
+    # Save model
     print('Finished Training')
     torch.save(net.state_dict(), modelPath)
 
-    metadata = open(modelPath+'.meta', 'w')
-    metadata.write(net)
-    metadata.close()
-
-def test_torch(modelPath, testloader, classes, num=4):
+def test_torch(device, modelPath, testloader, classes, batchSize):
+    # Get first batch
     dataiter = iter(testloader)
     images, labels = next(dataiter)
 
+    # Load net and get prediction
     net = Net()
-    net.load_state_dict(torch.load(modelPath, weights_only=True))
+    net.load_state_dict(torch.load(modelPath, weights_only=True, map_location=device))
+    net.eval()
     outputs = net(images)
     _, predicted = torch.max(outputs, 1)
 
+    # Calculate accuracy
     accuracy = 0.0
     for i in range(len(labels)):
         if labels[i]==predicted[i]:
             accuracy += 100.0/len(labels)
     print('GroundTruth', 'Predicted', '(accuracy - %f%%)'%accuracy)
-    print('\n'.join(f'{classes[labels[j]]:5s} {classes[predicted[j]]:5s}' for j in range(num)))
+    print('\n'.join(f'{classes[labels[j]]:5s} {classes[predicted[j]]:5s}' for j in range(batchSize)))
     imshow(torchvision.utils.make_grid(images))

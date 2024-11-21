@@ -29,6 +29,7 @@ class Net(nn.Module):
 def train_torch(device, modelPath, trainloader, epochs, lr, lr_gamma, lr_gamma_steps, momentum, epochsPerSave, elsPerStat):
     net = Net().to(device)
     print(net)
+    minLoss = 1000000.0
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=lr, momentum=momentum)
     scheduler = optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=lr_gamma_steps, gamma=lr_gamma)
@@ -52,11 +53,14 @@ def train_torch(device, modelPath, trainloader, epochs, lr, lr_gamma, lr_gamma_s
             # print statistics
             if i % elsPerStat == (elsPerStat-1):
                 print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / elsPerStat:.3f}')
+
+                # Adjust learning rate
+                minLoss = min(minLoss, running_loss/elsPerStat)
+                if (running_loss/elsPerStat)/minLoss > 1.2:
+                    scheduler.step()
+                    print('lr', scheduler.get_last_lr())
                 running_loss = 0.0
         
-        # Adjust learning rate
-        scheduler.step()
-
         # Save checkpoint
         if epoch % epochsPerSave == (epochsPerSave-1):
             torch.save(net.state_dict(), modelPath.replace('.pth', '_%se.pth'%(epoch+1)))

@@ -6,22 +6,22 @@ cfg = edict()
 cfg.train = edict()
 cfg.train.dataset_dir = "data/cropped"
 cfg.train.dataset_resize = 24
-cfg.train.batch_size = 124
+cfg.train.batch_size = 62
 cfg.train.epochs = 500
 cfg.train.lr = 0.05
 cfg.train.lr_gamma = 0.1
 cfg.train.lr_gamma_steps = 1
 cfg.train.momentum = 0.9
 cfg.train.model_path = 'pths/cropped_5.pth'
-cfg.train.save_every_nth_epoch = 5
-cfg.train.print_loss_every_n_batches = 50
+cfg.train.save_every_nth_epoch = 25
+cfg.train.print_loss_every_n_batches = 100
 
 # Test
 cfg.test = edict()
 cfg.test.dataset_dir = "data/cropped_test"
 cfg.test.dataset_resize = 24
 cfg.test.batch_size = 48
-cfg.test.model_path = 'pths/cropped_5_300e.pth'
+cfg.test.model_path = 'pths/cropped_4_300e.pth'
 
 # Inference
 cfg.inference = edict()

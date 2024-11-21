@@ -14,11 +14,13 @@ def train(cfg=cfg.train):
     metadata.write('%s\n%s'%(str(Net()),str(cfg)))
     metadata.close()
     trainloader = load_dataset_torch(dataset_dir=cfg.dataset_dir, resize=cfg.dataset_resize, batch_size=cfg.batch_size, show=False)
-    train_torch(device, cfg.model_path, trainloader=trainloader, epochs=cfg.epochs, lr=cfg.lr, momentum=cfg.momentum, epochsPerSave=cfg.save_every_nth_epoch, elsPerStat=cfg.print_loss_every_n_batches)
+    train_torch(device=device, modelPath=cfg.model_path, trainloader=trainloader,
+                epochs=cfg.epochs, lr=cfg.lr, lr_gamma=cfg.lr_gamma, lr_gamma_steps=cfg.lr_gamma_steps, momentum=cfg.momentum,
+                epochsPerSave=cfg.save_every_nth_epoch, elsPerStat=cfg.print_loss_every_n_batches)
 
 def test(cfg=cfg.test):
     classes = get_classes(cfg.dataset_dir)
-    testloader = load_dataset_torch(dataset_dir=cfg.dataset_dir+'_test', resize=cfg.dataset_resize, batch_size=cfg.batch_size, show=False)
+    testloader = load_dataset_torch(dataset_dir=cfg.dataset_dir, resize=cfg.dataset_resize, batch_size=cfg.batch_size, show=False)
     test_torch(device, cfg.model_path, testloader=testloader, classes=classes, batchSize=cfg.batch_size)
 
 def inference(cfg=cfg.inference):

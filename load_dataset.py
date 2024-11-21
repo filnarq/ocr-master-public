@@ -11,6 +11,7 @@ def get_classes(dataset_dir):
 def load_dataset_torch(dataset_dir, resize=16, batch_size=32, show=False):
     transform = transforms.Compose([
         transforms.Resize((resize,resize)),
+        transforms.RandomPerspective(distortion_scale=0.5, p=0.5, fill=128.0),
         # transforms.CenterCrop(9),
         transforms.ToTensor()
     ])

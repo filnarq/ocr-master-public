@@ -51,20 +51,24 @@ def train_torch(device, modelPath, trainloader, epochs, lr, lr_gamma, lr_gamma_s
             optimizer.step()
             running_loss += loss.item()
 
-            # print statistics
+            # check batch stats
             if i % elsPerStat == (elsPerStat-1):
-                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / elsPerStat:.3f}')
 
                 # Adjust learning rate
-                minLoss = min(minLoss, running_loss/elsPerStat)
-                if (running_loss/elsPerStat)/minLoss > 1.2:
+                if (running_loss/elsPerStat) > minLoss:
                     incrLoss += 1
-                if incrLoss > 10:
+                else:
+                    minLoss = running_loss/elsPerStat
+                    incrLoss = 0
+                if incrLoss > 3:
                     scheduler.step()
                     minLoss = running_loss/elsPerStat
                     incrLoss = 0
                     print('lr', scheduler.get_last_lr())
                 running_loss = 0.0
+
+                # Print
+                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / elsPerStat:.3f} | incrLoss {incrLoss} minLoss {minLoss}')
         
         # Save checkpoint
         if epoch % epochsPerSave == (epochsPerSave-1):

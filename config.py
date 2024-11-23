@@ -21,28 +21,16 @@ cfg.test = edict()
 cfg.test.dataset_dir = "data/cropped_test"
 cfg.test.dataset_resize = 24
 cfg.test.batch_size = 48
-cfg.test.model_path = 'pths/cropped_5_400e.pth'
+cfg.test.model_path = 'pths/cropped_5_125e.pth'
 
 # Inference
 cfg.inference = edict()
 cfg.inference.image_path = 'test.jpg'
-cfg.inference.model_path = 'pths/cropped_5_300e.pth'
+cfg.inference.model_path = 'pths/cropped_5_200e.pth'
 cfg.inference.classes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                          'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
                          'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
                          'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
                          'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 cfg.inference.dataset_resize = 24
-cfg.inference.show_letters = True
-
-# modelPath = 'pths/skewed_r_%d_b_%d_e_%d_lr_%s_m_%s%s.pth'%(
-#     resize,
-#     batchSize,
-#     epochs,
-#     str(lr).replace('.',''),
-#     str(momentum).replace('.',''),
-#     ''
-# )
-
-# imagePath = 'data/random/0QA7VoDbm3_590.jpg'
-# imagePath = 'images/kaggle.png'
+cfg.inference.show_letters = False

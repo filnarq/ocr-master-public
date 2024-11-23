@@ -55,7 +55,7 @@ def restore_boxes(region, affinity, region_thresh, affinity_thresh, remove_thres
 	# return [[x1, y1, x2, y2, x3, y3, x4, y4], [], ...]
 	boxes = []
 	M = (region > region_thresh) * np.invert(affinity > affinity_thresh)
-	cv2.imwrite('/tmp/M.png', np.float32(M)*255.0)
+	# cv2.imwrite('/tmp/M.png', np.float32(M)*255.0)
 	ret, markers = cv2.connectedComponents(np.uint8(M * 255))
 	for i in range(ret):
 		if i == 0:
@@ -93,7 +93,7 @@ def detect_dataset(model, device, submit_path, cfg, th1=None, th2=None, th3=None
 		with open(os.path.join(submit_path, 'res_' + os.path.basename(img_file).replace('.jpg','.txt')), 'w') as f:
 			f.writelines(seq)
 
-def main(img_path, model_path, out=None):
+def main(img_path, model_path=cfg.test.model_pth, out=cfg.test.out_img):
 	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 	model = CRAFT().to(device)
 	model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))

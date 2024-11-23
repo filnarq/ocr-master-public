@@ -36,7 +36,7 @@ def inference(cfg=cfg.inference):
     net.eval()
 
     # Detect textboxes
-    _, boxes = CRAFT.detect.main(img_path=cfg.image_path, model_path='CRAFT/pths/ft/model_iter_31600.pth', out='res.bmp')
+    _, boxes = CRAFT.detect.main(img_path=cfg.image_path)
     for box in boxes:
         # Warp textboxes
         x,y,w,h = int(box[0]), int(box[1]), int(box[4])-int(box[0]), int(box[5])-int(box[1])

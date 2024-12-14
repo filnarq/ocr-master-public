@@ -1,6 +1,5 @@
 import os
 import cv2
-import math
 import numpy as np
 import torch
 from torchvision import transforms
@@ -55,18 +54,24 @@ def restore_boxes(region, affinity, region_thresh, affinity_thresh, remove_thres
 	# return [[x1, y1, x2, y2, x3, y3, x4, y4], [], ...]
 	boxes = []
 	M = (region > region_thresh) * np.invert(affinity > affinity_thresh)
-	# cv2.imwrite('/tmp/M.png', np.float32(M)*255.0)
+	MB = (region > region_thresh*0.2) + (affinity > affinity_thresh)
+	cv2.imwrite('output/letters.png', np.float32(M)*255.0)
+	cv2.imwrite('output/words.png', np.float32(MB)*255.0)
 	ret, markers = cv2.connectedComponents(np.uint8(M * 255))
+	retB, markersB = cv2.connectedComponents(np.uint8(MB * 255))
 	for i in range(ret):
 		if i == 0:
 			continue
 		y,x=np.where(markers==i)
 		if len(y) < region.size * remove_thresh:
 			continue
-		cords = 2 * np.concatenate((x.reshape(-1,1)/ratio[1], y.reshape(-1,1)/ratio[0]), axis=1)
-		a = np.array([cords[:,0].min(), cords[:,1].min(), cords[:,0].max(), cords[:,1].min(), cords[:,0].max(), cords[:,1].max(), cords[:,0].min(), cords[:,1].max()])
+		cords = 2 * np.concatenate(
+			(x.reshape(-1,1)/ratio[1],y.reshape(-1,1)/ratio[0]),
+			axis=1)
+		a = np.array([
+			cords[:,0].min(), cords[:,1].min(), cords[:,0].max(), cords[:,1].min(), cords[:,0].max(), cords[:,1].max(), cords[:,0].min(), cords[:,1].max(), retB, markersB[y[0],x[0]]])
 		boxes.append(a)
-	return boxes
+	return sorted(boxes, key=lambda x: x[0])
 
 
 def detect_single_image(img, model, device, cfg):
@@ -99,16 +104,8 @@ def main(img_path, model_path=cfg.test.model_pth, out=cfg.test.out_img):
 	model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
 	model.eval()
 	img = Image.open(img_path).convert('RGB')
-	boxes = detect_single_image(img, model, device, cfg.test)
+	boxes, words = [box[:8] for box in detect_single_image(img, model, device, cfg.test)], [box[8:10] for box in detect_single_image(img, model, device, cfg.test)]
 	img = plot_boxes(img, boxes)
 	if out:
 		img.save(out)
-	return img, boxes
-
-
-if __name__ == '__main__':
-	img_files = [os.path.join(cfg.test.dataset_test_path, img_file) for img_file in sorted(os.listdir(cfg.test.dataset_test_path))]
-	img_path = np.random.choice(img_files)
-	img_path = '../data/ICDAR2013/test_img/img_113.jpg'
-	model_path  = './pths/pretrain/model_iter_50000.pth'
-
+	return img, boxes, words

@@ -1,9 +1,9 @@
 import argparse
+import numpy as np
 import cv2
 
 import CRAFT.detect
 from load_dataset import *
-from inference import *
 from train import *
 from config import cfg
 
@@ -13,10 +13,12 @@ def train(cfg=cfg.train):
     metadata = open(cfg.model_path+'.meta', 'w')
     metadata.write('%s\n%s'%(str(Net()),str(cfg)))
     metadata.close()
+    print(str(cfg))
     trainloader = load_dataset_torch(dataset_dir=cfg.dataset_dir, resize=cfg.dataset_resize, batch_size=cfg.batch_size, show=False)
-    train_torch(device=device, modelPath=cfg.model_path, trainloader=trainloader,
-                epochs=cfg.epochs, lr=cfg.lr, lr_gamma=cfg.lr_gamma, lr_gamma_steps=cfg.lr_gamma_steps, momentum=cfg.momentum,
-                epochsPerSave=cfg.save_every_nth_epoch, elsPerStat=cfg.print_loss_every_n_batches)
+    testloader = load_dataset_torch(dataset_dir=cfg.dataset_dir, resize=cfg.dataset_resize, batch_size=cfg.batch_size, show=False)
+    train_torch(device=device, modelPath=cfg.model_path, trainloader=trainloader, valloader=testloader,
+                epochs=cfg.epochs, lr=cfg.lr, lr_cd=cfg.lr_reduce_cooldown, lr_f=cfg.lr_reduce_factor, lr_p=cfg.lr_reduce_patience,
+                momentum=cfg.momentum, epochsPerSave=cfg.save_every_nth_epoch)
 
 def test(cfg=cfg.test):
     classes = get_classes(cfg.dataset_dir)
@@ -36,8 +38,9 @@ def inference(cfg=cfg.inference):
     net.eval()
 
     # Detect textboxes
-    _, boxes = CRAFT.detect.main(img_path=cfg.image_path)
-    for box in boxes:
+    _, boxes, wordsNums = CRAFT.detect.main(img_path=cfg.image_path)
+    words = [[] for i in range(int(wordsNums[0][0]))]
+    for i, box in enumerate(boxes):
         # Warp textboxes
         x,y,w,h = int(box[0]), int(box[1]), int(box[4])-int(box[0]), int(box[5])-int(box[1])
         perspective = np.reshape(np.array(box, dtype=np.float32), (4,2))
@@ -45,7 +48,8 @@ def inference(cfg=cfg.inference):
 
         # Get prediction
         prediction, probability = inference_torch(image=cv2.warpPerspective(img, cv2.getPerspectiveTransform(perspective, perspectiveDest), (size,size)), net=net)
-        cv2.putText(imgOut, text=cfg.classes[prediction], org=(x, y+h), fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, color=(0,0,255))
+        cv2.putText(imgOut, text=cfg.classes[prediction], org=(x, y+h), fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=5, color=(200,200,55),  thickness=3)
+        words[int(wordsNums[i][1])].append(cfg.classes[prediction])
 
         # Show prediction
         if cfg.show_letters:
@@ -53,9 +57,9 @@ def inference(cfg=cfg.inference):
             cv2.waitKey(1000000)
             cv2.destroyWindow('%s %f%%'%(cfg.classes[prediction],probability))
 
-    # Show image with text predictions
-    cv2.imshow('ocr',imgOut)
-    cv2.waitKey(1000000)
+    # Return results
+    print('\n'.join([''.join(word) for word in words]))
+    cv2.imwrite('output/res.png', imgOut)
 
 
 if __name__ == '__main__':
@@ -73,4 +77,4 @@ if __name__ == '__main__':
         case 'inference':
             inference()
         case _:
-            print('Use subcommand: train, test, inference\nFill config.py with values')
+            print('Available subcommands: train, test, inference\nFill config.py with values')

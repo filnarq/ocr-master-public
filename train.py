@@ -2,9 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
 import torchvision
 import aim
+import numpy as np
+
 from load_dataset import imshow
 
 class Net(nn.Module):

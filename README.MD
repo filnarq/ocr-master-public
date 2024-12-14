@@ -13,8 +13,17 @@ Copy models to corresponding folder in `CRAFT/pths`
 ### Dataset generation
 `datagen.sh` uses [belval/trdg](https://github.com/Belval/TextRecognitionDataGenerator) Docker image to generate letters dataset
 ## Usage
+### General
 ```
 $ python main.py
 Available subcommands: train, test, inference
 Fill config.py with values
+```
+### Training monitoring
+For training process monitoring [AimStack](https://aimstack.io/) is used
+```
+$ aim up
+Running Aim UI on repo `<Repo#-7217583351485859554 path=.aim read_only=None>`
+Open http://127.0.0.1:43800
+Press Ctrl+C to exit
 ```
